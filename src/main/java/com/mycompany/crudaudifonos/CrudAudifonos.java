@@ -1,44 +1,83 @@
 package com.mycompany.crudaudifonos;
 
 import com.mycompany.crudaudifonos.entities.TbAudifono;
-import com.mycompany.crudaudifonos.entities.TbCategoria;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
+import com.mycompany.crudaudifonos.entities.TbMantenimiento;
+import com.mycompany.crudaudifonos.entities.TbProveedor;
+import java.util.List;
 
 public class CrudAudifonos {
 
     public static void main(String[] args) {
 
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory("AudifonosPU");
-        EntityManager em = emf.createEntityManager();
+        ConsultasJPQL consultas = new ConsultasJPQL();
 
         try {
-            em.getTransaction().begin();
+            /*
+             * Consulta 1:
+             * Lista los audífonos con stock disponible,
+             * ordenados por precio de menor a mayor.
+             */
+            System.out.println("=== CONSULTA 1: AUDIFONOS DISPONIBLES ===");
+            List<TbAudifono> audifonosDisponibles = consultas.listarAudifonosDisponibles(0, 10);
 
-            TbCategoria categoria = em.find(TbCategoria.class, 6);
-
-            TbAudifono audifono = new TbAudifono();
-            audifono.setNombreAud("Logitech G435");
-            audifono.setCantidadAud(7);
-            audifono.setPrecioAud(95.0);
-            audifono.setIdCat(categoria);
-
-            em.persist(audifono);
-
-            em.getTransaction().commit();
-
-            System.out.println("Audifono guardado correctamente");
-
-        } catch (Exception e) {
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
+            for (TbAudifono audifono : audifonosDisponibles) {
+                System.out.println(
+                        "ID: " + audifono.getIdAud()
+                        + " | Nombre: " + audifono.getNombreAud()
+                        + " | Cantidad: " + audifono.getCantidadAud()
+                        + " | Precio: " + audifono.getPrecioAud()
+                );
             }
-            System.out.println("Error al insertar");
-            e.printStackTrace();
+
+            /*
+             * Consulta 2:
+             * Busca audífonos por una categoría existente en la base de datos.
+             * En este caso se usa la categoría "Gamer".
+             */
+            System.out.println("\n=== CONSULTA 2: AUDIFONOS POR CATEGORIA ===");
+            List<TbAudifono> audifonosPorCategoria = consultas.buscarAudifonosPorCategoria("Gamer", 0, 10);
+
+            for (TbAudifono audifono : audifonosPorCategoria) {
+                System.out.println(
+                        "ID: " + audifono.getIdAud()
+                        + " | Nombre: " + audifono.getNombreAud()
+                        + " | Categoria: " + audifono.getIdCat().getDescripcionCat()
+                );
+            }
+
+            /*
+             * Consulta 3:
+             * Lista los mantenimientos pendientes registrados en el sistema.
+             */
+            System.out.println("\n=== CONSULTA 3: MANTENIMIENTOS PENDIENTES ===");
+            List<TbMantenimiento> mantenimientos = consultas.listarMantenimientosPorEstado("Pendiente", 0, 10);
+
+            for (TbMantenimiento mantenimiento : mantenimientos) {
+                System.out.println(
+                        "ID: " + mantenimiento.getIdMan()
+                        + " | Estado: " + mantenimiento.getEstadoMan()
+                        + " | Descripcion: " + mantenimiento.getDescripcionMan()
+                        + " | Costo: " + mantenimiento.getCostoMan()
+                );
+            }
+
+            /*
+             * Consulta 4:
+             * Muestra los proveedores que tienen audífonos asociados.
+             */
+            System.out.println("\n=== CONSULTA 4: PROVEEDORES CON AUDIFONOS ===");
+            List<TbProveedor> proveedores = consultas.listarProveedoresConAudifonos(0, 10);
+
+            for (TbProveedor proveedor : proveedores) {
+                System.out.println(
+                        "ID: " + proveedor.getIdPro()
+                        + " | Nombre: " + proveedor.getNombrePro()
+                        + " | Correo: " + proveedor.getCorreoPro()
+                );
+            }
+
         } finally {
-            em.close();
-            emf.close();
+            consultas.cerrar();
         }
     }
 }
